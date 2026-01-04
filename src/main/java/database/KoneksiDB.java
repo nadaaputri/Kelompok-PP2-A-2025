@@ -15,11 +15,16 @@ public class KoneksiDB {
             String user = "root";
             String pass = "";
 
+
+
             // Registrasi Driver
             Class.forName("com.mysql.cj.jdbc.Driver");
 
             // Buat koneksi
             mysqlconfig = DriverManager.getConnection(url, user, pass);
+
+            System.out.println("KONEKSI BERHASIL");
+
 
         } catch (Exception e) {
             JOptionPane.showMessageDialog(null, "Koneksi Gagal: " + e.getMessage());
