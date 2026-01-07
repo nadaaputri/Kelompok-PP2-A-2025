@@ -1,4 +1,4 @@
-package src.main.view;
+package src.main.java.view;
 
 public class AsistenView {
 }

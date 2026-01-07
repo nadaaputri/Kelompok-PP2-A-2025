@@ -1,4 +1,4 @@
-package src.main.model;
+package src.main.java.model;
 
 public class Asisten {
    private int id;
