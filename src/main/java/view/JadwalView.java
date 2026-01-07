@@ -1,5 +1,7 @@
 package src.main.java.view;
 
+
+
 import src.main.java.controller.JadwalController;
 import src.main.java.model.ComboItem;
 
@@ -35,6 +37,7 @@ public class JadwalView extends JPanel {
 
     private JadwalController controller;
 
+
     public void setController(JadwalController controller) {
         this.controller = controller;
     }
@@ -45,6 +48,7 @@ public class JadwalView extends JPanel {
             controller.refreshAll();
         }
     }
+
 
     public JadwalView() {
         setLayout(new BorderLayout());
@@ -128,5 +132,6 @@ public class JadwalView extends JPanel {
     public void addCariListener(ActionListener l) { btnCari.addActionListener(l); }
     public void addRefreshListener(ActionListener l) { btnRefresh.addActionListener(l); }
     public void addTableMouseListener(MouseAdapter a) { table.addMouseListener(a); }
+
 
 }

@@ -23,6 +23,7 @@ public class Main {
 
             JTabbedPane tabs = new JTabbedPane();
 
+
             JadwalView jadwalView = new JadwalView();
             JadwalController jadwalController = new JadwalController(jadwalView);
             jadwalView.setController(jadwalController);
