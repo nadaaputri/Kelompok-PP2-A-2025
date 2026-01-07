@@ -1,135 +1,169 @@
 package src.main.java.controller;
 
-import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
-import javax.swing.JOptionPane;
+
+
 import src.main.java.database.KoneksiDB;
 import src.main.java.model.Asisten;
+import src.main.java.view.AsistenView;
+import src.main.java.view.JadwalView;
+
+import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class AsistenController {
-    public List<Asisten> getAll() {
+    private AsistenView view;
+    private JadwalView jadwalView;
+
+
+    public AsistenController(AsistenView view, JadwalView jadwalView) {
+        this.view = view;
+        this.jadwalView = jadwalView;
+
+        // Listener initialization
+        this.view.addTambahListener(e -> tambahData());
+        this.view.addEditListener(e -> editData());
+        this.view.addHapusListener(e -> hapusData());
+        this.view.addClearListener(e -> view.clearForm());
+        this.view.addTableMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                ambilDataTabel();
+            }
+        });
+
+        loadData();
+    }
+    // --- Logic Bisnis / CRUD ---
+
+    private void loadData() {
+        view.getTableModel().setRowCount(0);
         List<Asisten> list = new ArrayList<>();
-        String sql = "SELECT * FROM asisten";
-        try (Connection conn = KoneksiDB.configDB();
-                Statement stm = conn.createStatement();
-                ResultSet res = stm.executeQuery(sql)) {
-            while (res.next()) {
+
+        try (Connection conn = KoneksiDB.configDB()) {
+            ResultSet rs = conn.createStatement().executeQuery("SELECT * FROM asisten");
+
+            while (rs.next()) {
                 list.add(new Asisten(
-                        res.getInt("id_asisten"),
-                        res.getString("nama_asisten"),
-                        res.getString("nim"),
-                        res.getString("no_hp"),
-                        res.getString("email")));
+                        rs.getInt("id_asisten"),
+                        rs.getString("nama_asisten"),
+                        rs.getString("nim"),
+                        rs.getString("no_hp"),
+                        rs.getString("email")
+                ));
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return list;
-    }
 
-    public void insert(Asisten asisten) throws SQLException {
-        // Validasi Nama tidak boleh kosong
-        if (asisten.getNama_asisten().trim().isEmpty()) {
-            JOptionPane.showMessageDialog(null, "Nama Asisten tidak boleh kosong");
-            return;
-        }
-
-        // Validasi nama hanya boleh huruf dan spasi
-        if (!asisten.getNama_asisten().matches("^[a-zA-Z\\s]+$")) {
-            JOptionPane.showMessageDialog(null, "Nama berupa huruf!");
-            return;
-        }
-
-        // Validasi NIM tidak boleh kosong
-        if (asisten.getNim().trim().isEmpty()) {
-            JOptionPane.showMessageDialog(null, "NIM tidak boleh kosong");
-            return;
-        }
-
-        // Validasi NIM duplikat
-        if (checkNimExists(asisten.getNim())) {
-            JOptionPane.showMessageDialog(null, "NIM " + asisten.getNim() + " sudah terdaftar!");
-            return;
-        }
-
-        // Validasi no hp harus berupa angka
-        if (!asisten.getNo_hp().matches("\\d+")) {
-            JOptionPane.showMessageDialog(null, "No HP harus berupa angka!");
-            return;
-        }
-
-        String sql = "INSERT INTO asisten (nama_asisten, nim, no_hp, email) VALUES (?, ?, ?, ?)";
-        try (Connection conn = KoneksiDB.configDB();
-                PreparedStatement pst = conn.prepareStatement(sql)) {
-
-            pst.setString(1, asisten.getNama_asisten());
-            pst.setString(2, asisten.getNim());
-            pst.setString(3, asisten.getNo_hp());
-            pst.setString(4, asisten.getEmail());
-            pst.execute();
-        }
-    }
-
-    public void update(Asisten asisten) throws SQLException {
-        // Validasi Nama tidak boleh kosong
-        if (asisten.getNama_asisten().trim().isEmpty()) {
-            JOptionPane.showMessageDialog(null, "Nama Asisten tidak boleh kosong");
-            return;
-        }
-
-        // Validasi nama hanya boleh huruf dan spasi
-        if (!asisten.getNama_asisten().matches("^[a-zA-Z\\s]+$")) {
-            JOptionPane.showMessageDialog(null, "Nama berupa huruf!");
-            return;
-        }
-
-        // Validasi NIM tidak boleh kosong
-        if (asisten.getNim().trim().isEmpty()) {
-            JOptionPane.showMessageDialog(null, "NIM tidak boleh kosong");
-            return;
-        }
-
-        // Validasi no hp harus berupa angka
-        if (!asisten.getNo_hp().matches("\\d+")) {
-            JOptionPane.showMessageDialog(null, "No HP harus berupa angka!");
-            return;
-        }
-
-        String sql = "UPDATE asisten SET nama_asisten = ?, nim = ?, no_hp = ?, email = ? WHERE id_asisten = ?";
-        try (Connection conn = KoneksiDB.configDB();
-                PreparedStatement pst = conn.prepareStatement(sql)) {
-            pst.setString(1, asisten.getNama_asisten());
-            pst.setString(2, asisten.getNim());
-            pst.setString(3, asisten.getNo_hp());
-            pst.setString(4, asisten.getEmail());
-            pst.setInt(5, asisten.getId_asisten());
-            pst.executeUpdate();
-        }
-    }
-
-    public void delete(int id_asisten) throws SQLException {
-        String sql = "DELETE FROM asisten WHERE id_asisten = ?";
-        try (Connection conn = KoneksiDB.configDB();
-                PreparedStatement pst = conn.prepareStatement(sql)) {
-            pst.setInt(1, id_asisten);
-            pst.execute();
-        }
-    }
-
-    public boolean checkNimExists(String nim) {
-        String sql = "SELECT count(*) FROM asisten WHERE nim = ?";
-        try (Connection conn = KoneksiDB.configDB();
-                PreparedStatement pst = conn.prepareStatement(sql)) {
-            pst.setString(1, nim);
-            try (ResultSet res = pst.executeQuery()) {
-                if (res.next()) {
-                    return res.getInt(1) > 0;
-                }
+            for (Asisten a : list) {
+                view.getTableModel().addRow(new Object[]{
+                        a.getId(), a.getNama(), a.getNim(), a.getNoHp(), a.getEmail()
+                });
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(view, "Error Load: " + e.getMessage());
         }
-        return false;
+    }
+
+
+    private void tambahData() {
+        // Validasi
+        if (view.getNama().isEmpty() || view.getNim().isEmpty()) {
+            JOptionPane.showMessageDialog(view, "Nama dan NIM Wajib diisi!");
+            return;
+        }
+
+        try (Connection conn = KoneksiDB.configDB()) {
+            String sql = "INSERT INTO asisten (nama_asisten, nim, no_hp, email) VALUES (?, ?, ?, ?)";
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setString(1, view.getNama());
+            ps.setString(2, view.getNim());
+            ps.setString(3, view.getHp());
+            ps.setString(4, view.getEmail());
+            ps.executeUpdate();
+
+            JOptionPane.showMessageDialog(view, "Berhasil Tambah Data");
+            view.clearForm();
+            loadData();
+
+            jadwalView.refreshData();
+
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(view, "Error Tambah: " + e.getMessage());
+        }
+    }
+
+
+
+
+    private void editData() {
+        if (view.getId().isEmpty()) {
+            JOptionPane.showMessageDialog(view, "Pilih data dari tabel dahulu!");
+            return;
+        }
+
+        try (Connection conn = KoneksiDB.configDB()) {
+            String sql = "UPDATE asisten SET nama_asisten=?, nim=?, no_hp=?, email=? WHERE id_asisten=?";
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setString(1, view.getNama());
+            ps.setString(2, view.getNim());
+            ps.setString(3, view.getHp());
+            ps.setString(4, view.getEmail());
+            ps.setInt(5, Integer.parseInt(view.getId()));
+            ps.executeUpdate();
+
+            JOptionPane.showMessageDialog(view, "Berhasil Edit Data");
+            view.clearForm();
+            loadData();
+            jadwalView.refreshData();
+
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(view, "Error Edit: " + e.getMessage());
+        }
+    }
+
+    private void hapusData() {
+        if (view.getId().isEmpty()) {
+            JOptionPane.showMessageDialog(view, "Pilih data yang akan dihapus!");
+            return;
+        }
+
+        int confirm = JOptionPane.showConfirmDialog(view, "Yakin hapus data ini?", "Konfirmasi", JOptionPane.YES_NO_OPTION);
+        if (confirm == JOptionPane.YES_OPTION) {
+            try (Connection conn = KoneksiDB.configDB()) {
+                String sql = "DELETE FROM asisten WHERE id_asisten=?";
+                PreparedStatement ps = conn.prepareStatement(sql);
+                ps.setInt(1, Integer.parseInt(view.getId()));
+                ps.executeUpdate();
+
+                JOptionPane.showMessageDialog(view, "Berhasil Hapus Data");
+                view.clearForm();
+                loadData();
+                jadwalView.refreshData();
+
+            } catch (SQLException e) {
+                JOptionPane.showMessageDialog(view, "Error Hapus: " + e.getMessage());
+            }
+        }
+    }
+
+    private void ambilDataTabel() {
+        int row = view.getTable().getSelectedRow();
+        if (row != -1) {
+            String id = view.getTableModel().getValueAt(row, 0).toString();
+            String nama = view.getTableModel().getValueAt(row, 1).toString();
+            String nim = view.getTableModel().getValueAt(row, 2).toString();
+            String hp = view.getTableModel().getValueAt(row, 3).toString();
+            String email = view.getTableModel().getValueAt(row, 4).toString();
+
+            view.setForm(id, nama, nim, hp, email);
+        }
     }
 }

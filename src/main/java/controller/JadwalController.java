@@ -19,14 +19,13 @@ public class JadwalController {
 
     public JadwalController(JadwalView view) {
         this.view = view;
-        loadComboBoxData(); // Isi dropdown dulu
-        loadTableData("");  // Load semua data
+        loadComboBoxData();
+        loadTableData("");
 
         view.addTambahListener(e -> simpan("INSERT"));
         view.addEditListener(e -> simpan("UPDATE"));
         view.addHapusListener(e -> hapus());
 
-        // Fitur Filter & Search
         view.addRefreshListener(e -> loadTableData(""));
         view.addFilterListener(e -> loadTableData("WHERE j.hari = '" + view.getFilterHari() + "'"));
         view.addCariListener(e -> loadTableData("WHERE p.nama_praktikum LIKE '%" + view.getKeyword() + "%'"));
@@ -46,13 +45,11 @@ public class JadwalController {
             view.getCbPraktikum().removeAllItems();
             view.getCbAsisten().removeAllItems();
 
-            // Isi Combo Praktikum
             ResultSet rsP = conn.createStatement().executeQuery("SELECT id_praktikum, nama_praktikum FROM praktikum");
             while (rsP.next()) {
                 view.getCbPraktikum().addItem(new ComboItem(rsP.getInt(1), rsP.getString(2)));
             }
 
-            // Isi Combo Asisten
             ResultSet rsA = conn.createStatement().executeQuery("SELECT id_asisten, nama_asisten FROM asisten");
             while (rsA.next()) {
                 view.getCbAsisten().addItem(new ComboItem(rsA.getInt(1), rsA.getString(2)));
@@ -124,22 +121,19 @@ public class JadwalController {
             JOptionPane.showMessageDialog(view, "Pilih Praktikum dan Asisten!"); return;
         }
 
-        // Validasi field tidak boleh kosong
         if (view.getHari().isEmpty() || view.getMulai().isEmpty() || view.getSelesai().isEmpty() || view.getRuang().isEmpty()) {
             JOptionPane.showMessageDialog(view, "Semua field harus diisi!"); return;
         }
 
         try (Connection conn = KoneksiDB.configDB()) {
             PreparedStatement ps;
-            
-            // Validasi duplikat untuk INSERT atau UPDATE
+
             String checkSql;
             PreparedStatement checkPs;
-            
+
             if (type.equals("INSERT")) {
-                // Cek konflik jadwal: praktikum yang sama, hari yang sama, jam yang overlap
                 checkSql = "SELECT COUNT(*) FROM jadwal_praktikum WHERE id_praktikum = ? AND hari = ? " +
-                          "AND ((jam_mulai <= ? AND jam_selesai > ?) OR (jam_mulai < ? AND jam_selesai >= ?) OR (jam_mulai >= ? AND jam_selesai <= ?))";
+                        "AND ((jam_mulai <= ? AND jam_selesai > ?) OR (jam_mulai < ? AND jam_selesai >= ?) OR (jam_mulai >= ? AND jam_selesai <= ?))";
                 checkPs = conn.prepareStatement(checkSql);
                 checkPs.setInt(1, praktikum.getId());
                 checkPs.setString(2, view.getHari());
@@ -149,16 +143,15 @@ public class JadwalController {
                 checkPs.setString(6, view.getSelesai());
                 checkPs.setString(7, view.getMulai());
                 checkPs.setString(8, view.getSelesai());
-                
+
                 ResultSet rs = checkPs.executeQuery();
                 if (rs.next() && rs.getInt(1) > 0) {
                     JOptionPane.showMessageDialog(view, "Jadwal konflik! Praktikum ini sudah ada di hari dan waktu yang sama atau berdekatan.");
                     return;
                 }
-                
-                // Cek konflik asisten: asisten yang sama, hari yang sama, jam yang overlap
+
                 checkSql = "SELECT COUNT(*) FROM jadwal_praktikum WHERE id_asisten = ? AND hari = ? " +
-                          "AND ((jam_mulai <= ? AND jam_selesai > ?) OR (jam_mulai < ? AND jam_selesai >= ?) OR (jam_mulai >= ? AND jam_selesai <= ?))";
+                        "AND ((jam_mulai <= ? AND jam_selesai > ?) OR (jam_mulai < ? AND jam_selesai >= ?) OR (jam_mulai >= ? AND jam_selesai <= ?))";
                 checkPs = conn.prepareStatement(checkSql);
                 checkPs.setInt(1, asisten.getId());
                 checkPs.setString(2, view.getHari());
@@ -168,16 +161,15 @@ public class JadwalController {
                 checkPs.setString(6, view.getSelesai());
                 checkPs.setString(7, view.getMulai());
                 checkPs.setString(8, view.getSelesai());
-                
+
                 rs = checkPs.executeQuery();
                 if (rs.next() && rs.getInt(1) > 0) {
                     JOptionPane.showMessageDialog(view, "Jadwal konflik! Asisten ini sudah mengajar di hari dan waktu yang sama atau berdekatan.");
                     return;
                 }
-                
-                // Cek konflik ruangan: ruangan yang sama, hari yang sama, jam yang overlap
+
                 checkSql = "SELECT COUNT(*) FROM jadwal_praktikum WHERE ruangan = ? AND hari = ? " +
-                          "AND ((jam_mulai <= ? AND jam_selesai > ?) OR (jam_mulai < ? AND jam_selesai >= ?) OR (jam_mulai >= ? AND jam_selesai <= ?))";
+                        "AND ((jam_mulai <= ? AND jam_selesai > ?) OR (jam_mulai < ? AND jam_selesai >= ?) OR (jam_mulai >= ? AND jam_selesai <= ?))";
                 checkPs = conn.prepareStatement(checkSql);
                 checkPs.setString(1, view.getRuang());
                 checkPs.setString(2, view.getHari());
@@ -187,22 +179,21 @@ public class JadwalController {
                 checkPs.setString(6, view.getSelesai());
                 checkPs.setString(7, view.getMulai());
                 checkPs.setString(8, view.getSelesai());
-                
+
                 rs = checkPs.executeQuery();
                 if (rs.next() && rs.getInt(1) > 0) {
                     JOptionPane.showMessageDialog(view, "Jadwal konflik! Ruangan ini sudah digunakan di hari dan waktu yang sama atau berdekatan.");
                     return;
                 }
-                
+
                 ps = conn.prepareStatement("INSERT INTO jadwal_praktikum (id_praktikum, id_asisten, hari, jam_mulai, jam_selesai, ruangan) VALUES (?,?,?,?,?,?)");
             } else {
                 if (view.getId().isEmpty()) return;
-                
+
                 int currentId = Integer.parseInt(view.getId());
-                
-                // Cek konflik untuk UPDATE (kecuali record yang sedang diedit)
+
                 checkSql = "SELECT COUNT(*) FROM jadwal_praktikum WHERE id_praktikum = ? AND hari = ? AND id_jadwal != ? " +
-                          "AND ((jam_mulai <= ? AND jam_selesai > ?) OR (jam_mulai < ? AND jam_selesai >= ?) OR (jam_mulai >= ? AND jam_selesai <= ?))";
+                        "AND ((jam_mulai <= ? AND jam_selesai > ?) OR (jam_mulai < ? AND jam_selesai >= ?) OR (jam_mulai >= ? AND jam_selesai <= ?))";
                 checkPs = conn.prepareStatement(checkSql);
                 checkPs.setInt(1, praktikum.getId());
                 checkPs.setString(2, view.getHari());
@@ -213,15 +204,15 @@ public class JadwalController {
                 checkPs.setString(7, view.getSelesai());
                 checkPs.setString(8, view.getMulai());
                 checkPs.setString(9, view.getSelesai());
-                
+
                 ResultSet rs = checkPs.executeQuery();
                 if (rs.next() && rs.getInt(1) > 0) {
                     JOptionPane.showMessageDialog(view, "Jadwal konflik! Praktikum ini sudah ada di hari dan waktu yang sama atau berdekatan.");
                     return;
                 }
-                
+
                 checkSql = "SELECT COUNT(*) FROM jadwal_praktikum WHERE id_asisten = ? AND hari = ? AND id_jadwal != ? " +
-                          "AND ((jam_mulai <= ? AND jam_selesai > ?) OR (jam_mulai < ? AND jam_selesai >= ?) OR (jam_mulai >= ? AND jam_selesai <= ?))";
+                        "AND ((jam_mulai <= ? AND jam_selesai > ?) OR (jam_mulai < ? AND jam_selesai >= ?) OR (jam_mulai >= ? AND jam_selesai <= ?))";
                 checkPs = conn.prepareStatement(checkSql);
                 checkPs.setInt(1, asisten.getId());
                 checkPs.setString(2, view.getHari());
@@ -232,15 +223,15 @@ public class JadwalController {
                 checkPs.setString(7, view.getSelesai());
                 checkPs.setString(8, view.getMulai());
                 checkPs.setString(9, view.getSelesai());
-                
+
                 rs = checkPs.executeQuery();
                 if (rs.next() && rs.getInt(1) > 0) {
                     JOptionPane.showMessageDialog(view, "Jadwal konflik! Asisten ini sudah mengajar di hari dan waktu yang sama atau berdekatan.");
                     return;
                 }
-                
+
                 checkSql = "SELECT COUNT(*) FROM jadwal_praktikum WHERE ruangan = ? AND hari = ? AND id_jadwal != ? " +
-                          "AND ((jam_mulai <= ? AND jam_selesai > ?) OR (jam_mulai < ? AND jam_selesai >= ?) OR (jam_mulai >= ? AND jam_selesai <= ?))";
+                        "AND ((jam_mulai <= ? AND jam_selesai > ?) OR (jam_mulai < ? AND jam_selesai >= ?) OR (jam_mulai >= ? AND jam_selesai <= ?))";
                 checkPs = conn.prepareStatement(checkSql);
                 checkPs.setString(1, view.getRuang());
                 checkPs.setString(2, view.getHari());
@@ -251,13 +242,13 @@ public class JadwalController {
                 checkPs.setString(7, view.getSelesai());
                 checkPs.setString(8, view.getMulai());
                 checkPs.setString(9, view.getSelesai());
-                
+
                 rs = checkPs.executeQuery();
                 if (rs.next() && rs.getInt(1) > 0) {
                     JOptionPane.showMessageDialog(view, "Jadwal konflik! Ruangan ini sudah digunakan di hari dan waktu yang sama atau berdekatan.");
                     return;
                 }
-                
+
                 ps = conn.prepareStatement("UPDATE jadwal_praktikum SET id_praktikum=?, id_asisten=?, hari=?, jam_mulai=?, jam_selesai=?, ruangan=? WHERE id_jadwal=?");
                 ps.setInt(7, currentId);
             }
@@ -289,8 +280,6 @@ public class JadwalController {
         int r = view.getTable().getSelectedRow();
         if (r != -1) {
             String id = view.getTableModel().getValueAt(r, 0).toString();
-            // Note: Praktikum dan Asisten di combo box agak tricky untuk diset otomatis berdasarkan nama dari tabel
-            // Untuk simplifikasi, kita set form text biasa saja, user harus pilih ulang combobox jika mau edit.
             view.setForm(id,
                     view.getTableModel().getValueAt(r, 3).toString(),
                     view.getTableModel().getValueAt(r, 4).toString(),
