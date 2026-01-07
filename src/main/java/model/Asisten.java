@@ -1,64 +1,57 @@
 package src.main.java.model;
 
 public class Asisten {
-    private int id_asisten;
-    private String nama_asisten;
-    private String nim;
-    private String no_hp;
-    private String email;
+   private int id;
+   private String nama;
+   private String nim;
+   private String noHp;
+   private String email;
 
-    public Asisten(String nama_asisten, String nim, String no_hp, String email) {
-        this.nama_asisten = nama_asisten;
-        this.nim = nim;
-        this.no_hp = no_hp;
-        this.email = email;
-    }
+   public Asisten(int id, String nama, String nim, String noHp, String email) {
+      this.id = id;
+      this.nama = nama;
+      this.nim = nim;
+      this.noHp = noHp;
+      this.email = email;
+   }
 
-    public Asisten(int id_asisten, String nama_asisten, String nim, String no_hp, String email) {
-        this.id_asisten = id_asisten;
-        this.nama_asisten = nama_asisten;
-        this.nim = nim;
-        this.no_hp = no_hp;
-        this.email = email;
-    }
+   public int getId() {
+      return this.id;
+   }
 
-    public int getId_asisten() {
-        return id_asisten;
-    }
+   public void setId(int id) {
+      this.id = id;
+   }
 
-    public void setId_asisten(int id_asisten) {
-        this.id_asisten = id_asisten;
-    }
+   public String getNama() {
+      return this.nama;
+   }
 
-    public String getNama_asisten() {
-        return nama_asisten;
-    }
+   public void setNama(String nama) {
+      this.nama = nama;
+   }
 
-    public void setNama_asisten(String nama_asisten) {
-        this.nama_asisten = nama_asisten;
-    }
+   public String getNim() {
+      return this.nim;
+   }
 
-    public String getNim() {
-        return nim;
-    }
+   public void setNim(String nim) {
+      this.nim = nim;
+   }
 
-    public void setNim(String nim) {
-        this.nim = nim;
-    }
+   public String getNoHp() {
+      return this.noHp;
+   }
 
-    public String getNo_hp() {
-        return no_hp;
-    }
+   public void setNoHp(String noHp) {
+      this.noHp = noHp;
+   }
 
-    public void setNo_hp(String no_hp) {
-        this.no_hp = no_hp;
-    }
+   public String getEmail() {
+      return this.email;
+   }
 
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
+   public void setEmail(String email) {
+      this.email = email;
+   }
 }
