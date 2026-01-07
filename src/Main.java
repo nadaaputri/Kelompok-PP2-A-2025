@@ -33,12 +33,9 @@ public class Main {
             new AsistenController(asistenView, jadwalView);
             tabs.addTab("Kelola Asisten", asistenView);
 
-
             PraktikumView praktikumView = new PraktikumView();
             new PraktikumController(praktikumView, jadwalView);
             tabs.addTab("Kelola Praktikum", praktikumView);
-
-
 
             frame.add(tabs);
             frame.setVisible(true);
