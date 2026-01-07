@@ -1,4 +1,4 @@
-package src.main.java.controller;
+package src.main.controller;
 
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -10,9 +10,9 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import javax.swing.JOptionPane;
-import src.main.java.database.KoneksiDB;
-import src.main.java.model.Asisten;
-import src.main.java.view.AsistenView;
+import src.main.database.KoneksiDB;
+import src.main.model.Asisten;
+import src.main.view.AsistenView;
 import src.main.java.view.JadwalView;
 
 public class AsistenController {
