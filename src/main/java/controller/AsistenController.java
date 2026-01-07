@@ -23,32 +23,6 @@ public class AsistenController {
     private AsistenView view;
     private JadwalView jadwalView;
 
-//    public AsistenController(AsistenView view, JadwalView jadwalView) {
-//        this.view = view;
-//        this.jadwalView = jadwalView;
-//
-//        // Inisialisasi Event Listener
-//        this.view.addTambahListener(new ActionListener() {
-//            @Override
-//            public void actionPerformed(ActionEvent e) {
-//                tambahData();
-//            }
-//        });
-//
-//        this.view.addEditListener(e -> editData());   // Menggunakan Lambda (Java 8+)
-//        this.view.addHapusListener(e -> hapusData());
-//        this.view.addClearListener(e -> view.clearForm());
-//
-//        this.view.addTableMouseListener(new MouseAdapter() {
-//            @Override
-//            public void mouseClicked(MouseEvent e) {
-//                ambilDataTabel();
-//            }
-//        });
-//
-//        loadData(); // Load data saat awal
-//    }
-
 
     public AsistenController(AsistenView view, JadwalView jadwalView) {
         this.view = view;
